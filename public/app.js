@@ -15,14 +15,16 @@ function setSearch() {
   busqueda.on('change', (e) => {
     if (this.customSearch == false) {
       this.customSearch = true
+      //console.log('busqueda desactivada')
     } else {
       this.customSearch = false
+      //console.log('busqueda activada')
     }
     $('#personalizada').toggleClass('invisible')
   })
 }
 
-function ajaxRequest(url, type, data){
+function requestData(url, type, data){
     return $.ajax({
       url: url,
       type: type,
@@ -30,88 +32,104 @@ function ajaxRequest(url, type, data){
     })
 }
 
-function render(data){
+function mostrarData(data){
   var lista = $('.lista')
-  var dataTemplate = '<div class="card horizontal">' +
-                      '  <div class="card-image">' +
-                      '      <img src="img/home.jpg">' +
-                      '  </div>' +
-                      '  <div class="card-stacked">' +
-                      '    <div class="card-content">' +
-                      '      <div> <b>Direccion: </b>:direccion:</div>' +
-                      '      <div> <b>Ciudad: </b>:ciudad:</div>' +
-                      '      <div> <b>Telefono: </b>:telefono:</div>' +
-                      '      <div> <b>Código postal: </b>:postal:</div>' +
-                      '      <div> <b>Precio: </b>:precio:</div>' +
-                      '      <div> <b>Tipo: </b>:tipo:</div>' +
-                      '    </div>' +
-                      '    <div class="card-action right-align">' +
-                      '      <a href="#">Ver más</a>' +
-                      '    </div>' +
-                      '  </div>' +
-                     '</div>'
-
-  data.map((ddata) => {
-    var newData = dataTemplate.replace(':direccion:', ddata.Direccion)
-                              .replace(':ciudad:', ddata.Ciudad)
-                              .replace(':telefono:', ddata.Telefono)
-                              .replace(':postal:', ddata.Codigo_Postal)
-                              .replace(':precio:', ddata.Tipo)
-                              .replace(':tipo:', ddata.Precio)
+  var dataTemplate = `<div class="card horizontal">
+                        <div class="card-image">
+                            <img src="img/home.jpg">
+                        </div>
+                        <div class="card-stacked">
+                          <div class="card-content">
+                            <div> <b>Direccion: </b>:direccion:</div>
+                            <div> <b>Ciudad: </b>:ciudad:</div>
+                            <div> <b>Telefono: </b>:telefono:</div>
+                            <div> <b>Código postal: </b>:postal:</div>
+                            <div> <b>Precio: </b>:precio:</div>
+                            <div> <b>Tipo: </b>:tipo:</div>
+                          </div> 
+                          <div class="card-action right-align">
+                            <a href="#">Ver más</a>
+                          </div>
+                        </div> 
+                     </div>`
+   //traduce los elementos de matriz
+  data.map((data) => {
+    var newData = dataTemplate.replace(':direccion:', data.Direccion)
+                              .replace(':ciudad:', data.Ciudad)
+                              .replace(':telefono:', data.Telefono)
+                              .replace(':postal:', data.Codigo_Postal)
+                              .replace(':precio:', data.Tipo)
+                              .replace(':tipo:', data.Precio)
     lista.append(newData)
   })
 }
-// funcion para cargar los datos en los selects
-function cargaSelect(select, dataArray, tipo){
+// funcion para cargar y mostrar opciones por seleccionar de ciudad y tipo
+function cargarData(select, dataArray, tipo){
   let distinct = [... new Set(dataArray.map(item => item[tipo]))]
   for (var i = 0; i < distinct.length; i++){
     select.append($("<option></option>").attr("value", distinct[i]).text(distinct[i]));
   }
   $(select).material_select();
 }
-  var dataArray = [];
+
+var dataArray = [];
 
 $(function(){
   setSearch()
-  // arreglo para almacenar los datos del servidor
-  var dataArray = [];
+  var dataServer = [];
   var customSearch = false;
-  // cargar la informacion del servidor
-  var endpoint =  '/finder/'
+  var endpoint =  '/bdjson/'
   var data = 'nothing'
-  ajaxRequest(endpoint, 'GET', data)
-    .done(function(confirm){
-        dataArray = confirm
-        //cargar los datos en los selects
-        cargaSelect($("#ciudad"),dataArray,"Ciudad")
-        cargaSelect($("#tipo"),dataArray, "Tipo")
-    }).fail(function (error){
+  //invoca funcion requestData
+  requestData(endpoint, 'GET', data)
+    .done((contenidoArray) =>{
+        dataServer = contenidoArray
+        //console.log('Invoca funcion cargarData para realizar seleccion ')
+        cargarData($("#ciudad"),dataServer,"Ciudad")
+        cargarData($("#tipo"),dataServer, "Tipo")
+    }).fail((error) => {
         console.log(error)
   })
 
-  // renderizar la data en el evento click del boton buscar
-  $('#buscar').on('click', () =>{
+    $('#buscar').on('click', () =>{
     if($('#checkPersonalizada').prop("checked") == false){
        $(".lista").empty()
-        //busqueda general
-        render(dataArray)
+        // console.log('Invoca todas la datos')
+        mostrarData(dataServer)
     } else {
-      // obtener el rango de fechas
+      // obtener el rango de precios
       var slider = $("#rangoPrecio").data("ionRangeSlider");
       var from = slider.result.from;
       var to = slider.result.to;
-      //busqueda personalizada
-      var dataFilter = jQuery.grep(dataArray, (value, index) =>{
-          return (value.Ciudad == $("#ciudad").val() &&
-                  value.Tipo == $("#tipo").val() &&
-                  parseFloat(value.Precio.replace(/[$,]+/g,"")) >= from &&
-                  parseFloat(value.Precio.replace(/[$,]+/g,"")) <= to
-                  )
-      })
+      var ciu = document.getElementById("ciudad");
+      var valciudad =  ciu.options[ciu.selectedIndex].value;
+      //console.log('Invoca datos segun los rangos')
+      var tip = document.getElementById("tipo");
+      var valtipo =  tip.options[tip.selectedIndex].value;
+      var filtroRango = jQuery.grep(dataServer, (value, index) =>{
+        if (valciudad==""){
+            return (value.Tipo == $("#tipo").val() &&
+                    parseFloat(value.Precio.replace(/[$,]+/g,"")) >= from &&
+                    parseFloat(value.Precio.replace(/[$,]+/g,"")) <= to
+             )
+        }else{
+           if (valtipo==""){
+              return (value.Ciudad == $("#ciudad").val() &&
+                      parseFloat(value.Precio.replace(/[$,]+/g,"")) >= from &&
+                      parseFloat(value.Precio.replace(/[$,]+/g,"")) <= to
+              )
+            }else{
+                  return (value.Ciudad == $("#ciudad").val() &&
+                      value.Tipo == $("#tipo").val() &&
+                      parseFloat(value.Precio.replace(/[$,]+/g,"")) >= from &&
+                      parseFloat(value.Precio.replace(/[$,]+/g,"")) <= to
+                  ) 
+            }
+        }
+      });
       $(".lista").empty()
-      render(dataFilter)
+      // console.log('Invoca datos filtrados y rangos ')
+      mostrarData(filtroRango)
     }
   })
-
-
 })
