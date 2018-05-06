@@ -65,9 +65,9 @@ function mostrarData(data){
 }
 // funcion para cargar y mostrar opciones por seleccionar de ciudad y tipo
 function cargarData(select, dataArray, tipo){
-  let distinct = [... new Set(dataArray.map(item => item[tipo]))]
-  for (var i = 0; i < distinct.length; i++){
-    select.append($("<option></option>").attr("value", distinct[i]).text(distinct[i]));
+  let seleccion = [... new Set(dataArray.map(item => item[tipo]))]
+  for (var i = 0; i < seleccion.length; i++){
+    select.append($("<option></option>").attr("value", seleccion[i]).text(seleccion[i]));
   }
   $(select).material_select();
 }
@@ -80,7 +80,6 @@ $(function(){
   var customSearch = false;
   var endpoint =  '/bdjson/'
   var data = 'nothing'
-  //invoca funcion requestData
   requestData(endpoint, 'GET', data)
     .done((contenidoArray) =>{
         dataServer = contenidoArray
@@ -103,9 +102,9 @@ $(function(){
       var to = slider.result.to;
       var ciu = document.getElementById("ciudad");
       var valciudad =  ciu.options[ciu.selectedIndex].value;
-      //console.log('Invoca datos segun los rangos')
       var tip = document.getElementById("tipo");
       var valtipo =  tip.options[tip.selectedIndex].value;
+      //console.log('Invoca datos segun los rangos')
       var filtroRango = jQuery.grep(dataServer, (value, index) =>{
         if (valciudad==""){
             return (value.Tipo == $("#tipo").val() &&
@@ -128,7 +127,6 @@ $(function(){
         }
       });
       $(".lista").empty()
-      // console.log('Invoca datos filtrados y rangos ')
       mostrarData(filtroRango)
     }
   })

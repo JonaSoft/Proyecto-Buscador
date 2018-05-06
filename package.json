@@ -1,7 +1,7 @@
 {
   "name": "proyectobuscador",
   "version": "1.0.0",
-  "description": "proyecto buscador",
+  "description": "proyecto buscador con node.js",
   "main": "index.js",
   "dependencies": {
     "body-parser": "^1.18.2",
@@ -12,6 +12,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "carlos ucañan",
+  "author": "Carlos Ucañán Barrera",
   "license": "ISC"
 }
